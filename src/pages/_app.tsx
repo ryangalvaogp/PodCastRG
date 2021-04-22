@@ -6,11 +6,11 @@ import Player from '../components/Player'
 function MyApp({ Component, pageProps }) {
   return (
     <div className={styles.wrapper}>
-      <Player />
       <main>
         <Header />
         <Component {...pageProps} />
       </main>
+      <Player />
     </div>
   )
 }
