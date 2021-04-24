@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { PlayerContext } from '../contexts/PlayerContext';
 import Image from 'next/image';
 import { GetStaticProps } from 'next';
 import Link from 'next/link'
@@ -12,6 +14,12 @@ export default function Home({
   allEpisodes,
   latestEpisodes
 }: HomeProps) {
+  const {
+    currentEpisodeIndex, 
+    episodeList, 
+    play,
+  } = useContext(PlayerContext);
+
   return (
     <div className={styles.homepage}>
       <section className={styles.latestEpisodes}>
@@ -33,7 +41,11 @@ export default function Home({
                 <span>{ep.file.duration}</span>
               </div>
               <button type='button'>
-                <img src="/play-green.svg" alt="Tocar Episódio" />
+                <img 
+                  src="/play-green.svg" 
+                  alt="Tocar Episódio" 
+                  onClick={e=> play(ep)}
+                  />
               </button>
             </li>
           ))}
