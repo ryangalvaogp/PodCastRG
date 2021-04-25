@@ -1,3 +1,4 @@
+import Head from 'next/head'
 import { parseISO, format as forma } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { GetStaticPaths, GetStaticProps } from 'next'
@@ -7,14 +8,26 @@ import { api } from '../../services/api'
 import convertDurationToTimeString from '../../utils/convertDurationToTimeString'
 import { slugEpisodeProps, EpisodeProps, dataEpisodeProps } from '../../types/appTypes'
 import styles from '../../styles/pages/slug.module.scss'
+import { useContext } from 'react'
+import { PlayerContext } from '../../contexts/PlayerContext'
 
 export default function Episode({ episode }: slugEpisodeProps) {
+    const {
+        isPlaying,
+        play
+    } = useContext(PlayerContext);
     return (
         <div className={styles.episode}>
+            <Head>
+                <title>{episode.title} | PodcastRG</title>
+            </Head>
             <div className={styles.thumbnailContainer}>
                 <Link href='/'>
                     <button type='button'>
-                        <img src="/arrow-left.svg" alt="Voltar" />
+                        <img
+                            src="/arrow-left.svg"
+                            alt="Voltar"
+                        />
                     </button>
                 </Link>
                 <Image
@@ -23,8 +36,21 @@ export default function Episode({ episode }: slugEpisodeProps) {
                     src={episode.thumbnail}
                     objectFit={'cover'}
                 />
-                <button type='button'>
-                    <img src="/play.svg" alt="Tocar Episódio" />
+                <button
+                    type='button'
+                    onClick={() => play(episode)}
+                >
+                    {!isPlaying ?
+                        <img
+                            src="/play.svg"
+                            alt="Tocar Episódio"
+                        /> :
+                        <img
+                            src="/pause.svg"
+                            alt="Pausar Episódio"
+                        />
+                    }
+
                 </button>
             </div>
             <header>
@@ -42,22 +68,22 @@ export default function Episode({ episode }: slugEpisodeProps) {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-    const {data} = await api.get(`episodes`,{
-        params:{
-            _limit:2,
-            _sort:'published_at',
-            _order:'desc'
+    const { data } = await api.get(`episodes`, {
+        params: {
+            _limit: 2,
+            _sort: 'published_at',
+            _order: 'desc'
         }
     });
 
-    const paths = data.map((ep:EpisodeProps)=>{
+    const paths = data.map((ep: EpisodeProps) => {
         return {
-            params:{
-                slug:ep.id
+            params: {
+                slug: ep.id
             }
         }
     })
-      
+
     return {
         paths,
         fallback: 'blocking'
@@ -80,6 +106,7 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
             { locale: ptBR }),
         file: {
             duration: convertDurationToTimeString(data.file.duration),
+            durationSec: data.file.duration,
             url: data.file.url
         }
     };

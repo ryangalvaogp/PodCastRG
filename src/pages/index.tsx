@@ -1,31 +1,36 @@
-import { useContext } from 'react';
-import { PlayerContext } from '../contexts/PlayerContext';
+import { usePlayer } from '../contexts/PlayerContext';
 import Image from 'next/image';
 import { GetStaticProps } from 'next';
 import Link from 'next/link'
+import Head from 'next/head'
 import { api } from '../services/api';
 import { format as forma, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import convertDurationToTimeString from '../utils/convertDurationToTimeString';
 import styles from '../styles/pages/home.module.scss';
-import {HomeProps, EpisodesProps} from '../types/appTypes'
+import { HomeProps, EpisodesProps } from '../types/appTypes'
+import Episode from './episodes/[slug]';
 
 export default function Home({
   allEpisodes,
   latestEpisodes
 }: HomeProps) {
   const {
-    currentEpisodeIndex, 
-    episodeList, 
-    play,
-  } = useContext(PlayerContext);
+    playList
+  } = usePlayer();
+
+  const episodeList = [...latestEpisodes, ...allEpisodes];
 
   return (
     <div className={styles.homepage}>
+      <Head>
+        <title>Home | PodcastRG</title>
+      </Head>
+
       <section className={styles.latestEpisodes}>
         <h2>Últimos Lançamentos</h2>
         <ul>
-          {latestEpisodes.map(ep => (
+          {latestEpisodes.map((ep, index) => (
             <li key={ep.id}>
               <Image
                 objectFit='cover'
@@ -35,17 +40,19 @@ export default function Home({
                 alt={ep.title}
               />
               <div className={styles.episodesDetails}>
-                <a href="#">{ep.title}</a>
+                <Link href={`episodes/${ep.id}`}>
+                  <a>{ep.title}</a>
+                </Link>
                 <p>{ep.members}</p>
                 <span>{ep.published_at}</span>
                 <span>{ep.file.duration}</span>
               </div>
               <button type='button'>
-                <img 
-                  src="/play-green.svg" 
-                  alt="Tocar Episódio" 
-                  onClick={e=> play(ep)}
-                  />
+                <img
+                  src="/play-green.svg"
+                  alt="Tocar Episódio"
+                  onClick={e => playList(episodeList, index)}
+                />
               </button>
             </li>
           ))}
@@ -63,9 +70,9 @@ export default function Home({
             <th></th>
           </thead>
           <tbody>
-            {allEpisodes.map(ep => (
+            {allEpisodes.map((ep, index) => (
               <tr key={ep.id}>
-                <td style={{width:72}}>
+                <td style={{ width: 72 }}>
                   <Image
                     width={120}
                     height={120}
@@ -77,13 +84,13 @@ export default function Home({
                 <td>
                   <Link href={`episodes/${ep.id}`}>
                     <a>{ep.title}</a>
-                    </Link>
+                  </Link>
                 </td>
                 <td>{ep.members}</td>
-                <td style={{width:100}}>{ep.published_at}</td>
+                <td style={{ width: 100 }}>{ep.published_at}</td>
                 <td>{ep.file.duration}</td>
                 <td>
-                  <button type='button'>
+                  <button type='button' onClick={() => playList(episodeList, index + latestEpisodes.length)}>
                     <img src="/play-green.svg" alt="Tocar Episódio" />
                   </button>
                 </td>
@@ -114,6 +121,7 @@ export const getStaticProps: GetStaticProps = async () => {
       published_at: forma(parseISO(ep.published_at), 'd MMM yy', { locale: ptBR }),
       file: {
         duration: convertDurationToTimeString(ep.file.duration),
+        durationSec:ep.file.duration,
         url: ep.file.url
       }
     };
