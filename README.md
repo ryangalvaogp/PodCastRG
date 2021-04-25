@@ -51,6 +51,14 @@ Esse projeto foi desenvolvido com as seguintes tecnologias:
 - [Date-fns](https://date-fns.org/)
 
 
+
+## 💻 Web Demo
+
+<h1 align="center">
+<img alt="Episode Page Details" src="/demo/EpisodeDetails.png" height="500" width="570px">
+<img alt="Home Page"  src="/demo/HomePage.png" height="500" width="570px">
+</h1>
+
  
  
 
