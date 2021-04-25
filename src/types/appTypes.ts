@@ -9,6 +9,7 @@ export type EpisodeProps = {
       url: string
       type?: string
       duration: number | string
+      durationSec: number | string
     }
   }
   
@@ -21,6 +22,7 @@ export type EpisodesProps = {
   description?: string
   file: {
     url: string
+    durationSec:number | string
     duration: number | string
   }
 }
