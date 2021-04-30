@@ -1,16 +1,13 @@
 import { Request, Response } from 'express';
 import { connection } from '../database/config/connection';
 import * as mm from 'music-metadata';
+import got from 'got'
 import crypto from 'crypto'
 import format from 'date-fns/format'
 import { EpisodeDB, EpisodeFormated } from '../types/apiTypes';
 import env from 'dotenv'
-import fs from 'fs'
-import path from 'path'
-import https from 'https'
 
 env.config()
-
 
 export default {
 
@@ -57,60 +54,57 @@ export default {
         const {//@ts-expect-error
             key: filename,//@ts-expect-error
             location: url = `http://localhost:4444/files/${filename}`,
-            mimetype: type
+            mimetype: type,
+            size
         } = req.file;
 
         let duration
-        await downloadFile(url, filename).finally(async function () {
-            setTimeout(async function () {
-                duration = await getDurationAudio(filename)
 
-                const episodeProps = {
-                    id: crypto.randomBytes(3).toString('hex'),
-                    title,
-                    members,
-                    published_at: format(Date.now(), 'yyyy-MM-dd kk:mm:ss'),
-                    thumbnail,
-                    description,
-                    idUsuario: Number(authorization)!!
-                }
-        
-                const episodeFileProps = {
-                    idFile: Math.floor(Math.random() * 997 * 2),
-                    url,
-                    type,
-                    duration,
-                    idEpisode: episodeProps.id,
-                }
-        
-                try {
-                    console.dir({ episodeFileProps }, { depth: null })
-                    await connection('episodes').insert(episodeProps);
-        
-                    try {
-                        await connection('file').insert(episodeFileProps);
-                    } catch (error) {
-                        await connection('episodes').where('id', episodeProps.id).delete();
-                        return res.json({
-                            status: 'Episódio não cadastrado',
-                            motive: 'Não foi possível gravar informações do audio no DB',
-                            erro: error.message
-                        })
-                    };
-        
-                    return res.json({
-                        status: 'Episódio cadastrado com sucesso'
-                    })
-                } catch (error) {
-                    return res.json({
-                        status: 'Episódio não cadastrado',
-                        motive: 'Não foi possível gravar informações do episódio no DB',
-                        erro: error.message
-                    })
-                }
-        
-            }, 2000)
-        });
+        duration = await getDurationAudio(filename, url, type, size)
+
+        const episodeProps = {
+            id: crypto.randomBytes(3).toString('hex'),
+            title,
+            members,
+            published_at: format(Date.now(), 'yyyy-MM-dd kk:mm:ss'),
+            thumbnail,
+            description,
+            idUsuario: Number(authorization)!!
+        }
+
+        const episodeFileProps = {
+            idFile: Math.floor(Math.random() * 997 * 2),
+            url,
+            type,
+            duration,
+            idEpisode: episodeProps.id,
+        }
+
+        try {
+            //console.dir({ episodeFileProps }, { depth: null })
+            await connection('episodes').insert(episodeProps);
+
+            try {
+                await connection('file').insert(episodeFileProps);
+            } catch (error) {
+                await connection('episodes').where('id', episodeProps.id).delete();
+                return res.json({
+                    status: 'Episódio não cadastrado',
+                    motive: 'Não foi possível gravar informações do audio no DB',
+                    erro: error.message
+                })
+            };
+
+            return res.json({
+                status: 'Episódio cadastrado com sucesso'
+            })
+        } catch (error) {
+            return res.json({
+                status: 'Episódio não cadastrado',
+                motive: 'Não foi possível gravar informações do episódio no DB',
+                erro: error.message
+            })
+        }
     },
     async delete(req: Request, res: Response) {
         const { authorization } = req.headers;
@@ -159,27 +153,14 @@ export default {
     },
 }
 
-async function getDurationAudio(filename: string) {
+async function getDurationAudio(filename: string, url: string, mimeType: string, size: number) {
     try {
-        console.log(String(filename))
+        const stream = await got.stream(url);
+        const { format } = await mm.parseStream(stream, { mimeType, size });
 
-        const { format } = await mm.parseFile(`./episodes/${filename}`);
-
-        console.dir(format.duration, {depth:null})
+        console.dir(format.duration, { depth: null })
         return Math.floor(Number(format.duration));
     } catch (error) {
         console.log(error);
     }
-
-};
-
-async function downloadFile(url:string, filename: string) {
-    return new Promise<void>((resolve, eject) => {
-        const fileWrite = fs.createWriteStream(path.resolve(__dirname, '..', '..', 'episodes', filename));
-        https.get(url, async function (response) {
-            response.pipe(fileWrite);
-
-        })
-        resolve()
-    })
 };
