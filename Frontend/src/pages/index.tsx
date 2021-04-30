@@ -10,6 +10,7 @@ import convertDurationToTimeString from '../utils/convertDurationToTimeString';
 import styles from '../styles/pages/home.module.scss';
 import { HomeProps, EpisodesProps } from '../types/appTypes'
 import Episode from './episodes/[slug]';
+import { useSession } from '../contexts/sessionContext';
 
 export default function Home({
   allEpisodes,
@@ -18,7 +19,7 @@ export default function Home({
   const {
     playList
   } = usePlayer();
-
+ 
   const episodeList = [...latestEpisodes, ...allEpisodes];
 
   return (
@@ -104,7 +105,7 @@ export default function Home({
 };
 
 export const getStaticProps: GetStaticProps = async () => {
-  const { data } = await api.get('episodes', {
+  const { data } = await api.get('ep', {
     params: {
       _limit: 12,
       _sort: 'published_at',
