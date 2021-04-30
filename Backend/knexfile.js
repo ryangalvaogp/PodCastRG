@@ -1,4 +1,4 @@
-// Update with your config settings.
+require('dotenv').config()
 
 module.exports = {
 
@@ -17,10 +17,10 @@ module.exports = {
     client: 'pg',
 
     connection: {
-      host:'tuffi.db.elephantsql.com',
-      database: 'ctrjndpo',
-      user: 'ctrjndpo',
-      password: 'C7y4z2VowZcmXrLtwov5-5uzHhnwYiUQ',
+      host:process.env.POSTGRESQL_ELEPHANT_HOST,
+      database:process.env.POSTGRESQL_ELEPHANT_DATABASE,
+      user: process.env.POSTGRESQL_ELEPHANT_USER,
+      password: process.env.POSTGRESQL_ELEPHANT_PASSWORD,
 
     },
     migrations: {

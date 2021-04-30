@@ -15,7 +15,9 @@
 /episodes/*.m4r
 /episodes/*.mp3
 
+#Dependencias dos Packs Managers
 yarn.lock
+package-lock.json
 
 .env
 
